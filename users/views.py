@@ -23,6 +23,11 @@ class RegisterView(generics.GenericAPIView):
     serializer_class = RegisterUserByEmailSerializer
     
     def post(self, request):
+        """
+        response = RegisterService.register_user(user,serializer)
+        pyotp.TOTP.verify(784733)
+        """
+        
         try:
             user = request.data
             serializer = self.serializer_class(data=request.data)
@@ -66,3 +71,6 @@ class VerifyEmailView(APIView):
             return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
         
         return Response("User created successfull", status=status.HTTP_200_OK)
+
+class LoginView(APIView):
+    pass

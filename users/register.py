@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from .models import User
+from users.selectors.base import fetch_all_users
 import os
 import random
 from rest_framework.exceptions import AuthenticationFailed
@@ -14,7 +15,7 @@ def generate_username(email):
         
 
 def register_user_sample(provider, user_id, email):
-    filtered_user_by_email = User.objects.filter(email=email)
+    filtered_user_by_email = fetch_all_users(email=email)
     
     if filtered_user_by_email.exists():
         

@@ -136,3 +136,8 @@ AUTH_USER_MODEL = 'users.User'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = '127.0.0.1'
 EMAIL_PORT = 1025
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'users.auth_backend.PasswordlessAuthBackend',
+)
