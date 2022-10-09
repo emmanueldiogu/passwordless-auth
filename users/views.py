@@ -56,7 +56,7 @@ class VerifyEmailView(APIView):
         try:
             inputs_ = request.data
             validator = VerifyEmailSerializer(data=inputs_)
-            validator.is_valid()
+            validator.is_valid(raise_exception=True)
             keygen = GenerateKey()
             user = validator.validated_data.get('email')
             otp = validator.validated_data.get('auth_totp')
