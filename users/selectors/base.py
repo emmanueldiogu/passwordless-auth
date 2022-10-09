@@ -3,3 +3,6 @@ User = get_user_model()
 
 def fetch_all_users(**kwargs):
     return User.objects.filter(**kwargs)
+
+def fetch_user(**kwargs):
+    return User.objects.filter(**kwargs).last()

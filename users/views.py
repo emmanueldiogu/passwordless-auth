@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
 from .register import generate_username
-from .serializers import RegisterUserByEmailSerializer
+from .serializers import RegisterUserByEmailSerializer, VerifyEmailSerializer
 from .utils import Util
 
 
@@ -54,16 +54,18 @@ class VerifyEmailView(APIView):
     @staticmethod
     def post(request):
         try:
-            user = request.data
-            
+            inputs_ = request.data
+            validator = VerifyEmailSerializer(data=inputs_)
+            validator.is_valid()
             keygen = GenerateKey()
-            email = 'manobegod2@example.local'
-            key = base64.b32encode(keygen.return_key(email).encode())
+            user = validator.validated_data.get('email')
+            otp = validator.validated_data.get('auth_totp')
+            key = base64.b32encode(keygen.return_key(user.email).encode())
             totp = pyotp.TOTP(key, digits=6, interval = EXPIRY_TIME)
-            if totp.verify(user['otp']):
-                User.objects.get(email=email)
-                User.is_verified = True
-                User.save()
+            if totp.verify(otp):
+                # User.objects.get(email=email)
+                user.is_verified = True
+                user.save()
             # user['otp'] = OTP.now
             print(f'Your OTP is: {totp.now()}')
             
