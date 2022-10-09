@@ -1,1 +1,9 @@
 db.sqlite3
+__pycache__/
+*.pot
+*.pyc
+*.log
+*.copy
+.env
+.vscode
+media/
