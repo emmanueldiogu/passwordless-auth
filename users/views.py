@@ -56,7 +56,7 @@ class VerifyEmailView(APIView):
         try:
             inputs_ = request.data
             validator = VerifyEmailSerializer(data=inputs_)
-            validator.is_valid()
+            validator.is_valid(raise_exception=True)
             keygen = GenerateKey()
             user = validator.validated_data.get('email')
             otp = validator.validated_data.get('auth_totp')
@@ -66,6 +66,8 @@ class VerifyEmailView(APIView):
                 # User.objects.get(email=email)
                 user.is_verified = True
                 user.save()
+            else:
+                return Response(data={"details": "Invalid otp"}, status=status.HTTP_400_BAD_REQUEST)
             # user['otp'] = OTP.now
             print(f'Your OTP is: {totp.now()}')
             

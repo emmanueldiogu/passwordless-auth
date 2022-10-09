@@ -59,6 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self) -> str:
         return self.email
     
+    @property
     def jwt_tokens(self):
         refresh = RefreshToken.for_user(self)
         return {
