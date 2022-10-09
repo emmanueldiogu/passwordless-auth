@@ -2,6 +2,7 @@ from dataclasses import field
 from rest_framework import serializers
 
 from users.models import User
+from users.selectors.base import fetch_all_users, fetch_user
 from .register import register_user_sample, generate_username
 from .validators import CheckOTP
 
@@ -24,6 +25,13 @@ class RegisterUserByEmailSerializer(serializers.ModelSerializer):
     
 class VerifyEmailSerializer(serializers.Serializer):
     auth_totp = serializers.IntegerField()
+    email = serializers.EmailField()
+
+    def validate_email(self,value):
+        user = fetch_user(email = value)
+        if not bool(user):
+            raise serializers.ValidationError('email does not exist')
+        return user
     
 
 class EmailAuthSerializer(serializers.Serializer):
