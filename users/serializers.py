@@ -33,25 +33,20 @@ class VerifyEmailSerializer(serializers.Serializer):
         return user
     
 
-class EmailAuthSerializer(serializers.Serializer):
+class LoginSerializer(serializers.ModelSerializer):
     
-    """ Handle serialization of emailrelated data"""
+    email = serializers.EmailField()
+    username = serializers.CharField(read_only=True)
     
-    auth_token = serializers.CharField()
+    class Meta:
+        model = User
+        fields = ['email','username']
+        read_only_fields = ['username']
     
-    def validate_auth_token(self, auth_token):
-        user_data = CheckOTP(auth_token)
-        
-        try:
-            user_id = user_data['id']
-            email = user_data['email']
-            provider = 'email'
-            return register_user_sample(
-                provider=provider,
-                user_id=user_id,
-                email=email,
-            )
-        except Exception as identifier:
-            raise serializers.ValidationError(
-                'The token is invalid or expired. Please login again.'
-            )
+    def validate_email(self,value):
+        user = fetch_user(email = value)
+        if not bool(user):
+            raise serializers.ValidationError('email does not exist')
+        if not user.auth_provider == 'email':
+            raise serializers.ValidationError('Login with your '+ user.auth_provider)
+        return user
