@@ -15,16 +15,15 @@ class RegisterUserByEmailSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         email = attrs.get('email', '')
-        username = generate_username(attrs.get('email'))
+        username = generate_username(email=email)
         attrs['username'] = username
-        print(attrs)
         return attrs
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
     
 class VerifyEmailSerializer(serializers.Serializer):
-    auth_totp = serializers.IntegerField()
+    otp = serializers.IntegerField()
     email = serializers.EmailField()
 
     def validate_email(self,value):

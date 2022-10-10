@@ -1,7 +1,7 @@
 import base64, pyotp
 from datetime import datetime
 from django.shortcuts import render
-from ..utils import Util
+from ..utils import MailerClass
 
 
 class RegisterService:
@@ -18,9 +18,6 @@ class RegisterService:
         totp = pyotp.TOTP(key, digits=6, interval = EXPIRY_TIME)
         email_body = "Use this otp " + totp.now() + " to verify your account."
         data = {'email_subject':'Verify your email', 'email_body':email_body, 'email_to':user['email']}
-        Util.send_email(data)
-        
-        # user['otp'] = OTP.now
-        print(f'Your OTP is: {totp.now()}')
+        MailerClass.send_email(data)
         data = serializer.data
         return {"success":True,"message":"Successfully register user","data":data}

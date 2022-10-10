@@ -1,22 +1,16 @@
-import base64, pyotp
-from datetime import datetime
-from django.shortcuts import render
+from django.contrib.auth import authenticate
 from rest_framework import generics, status, views, permissions
+from rest_framework.exceptions import AuthenticationFailed
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import User
 from .register import generate_username
 from .serializers import RegisterUserByEmailSerializer, VerifyEmailSerializer
-from .utils import Util
+from .utils import MailerClass, CreateOTP
 
 
 # Create your views here.
-EXPIRY_TIME = 300
-
-class GenerateKey:
-    @staticmethod
-    def return_key(email):
-        return str(email) + str(datetime.date(datetime.now())) + 'secretkey'
 
 class RegisterView(generics.GenericAPIView):
     
@@ -33,13 +27,11 @@ class RegisterView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            keygen = GenerateKey()
             email = user['email']
-            key = base64.b32encode(keygen.return_key(email).encode())
-            totp = pyotp.TOTP(key, digits=6, interval = EXPIRY_TIME)
+            totp = CreateOTP.generate_totp(email)
             email_body = "Use this otp " + totp.now() + " to verify your account."
             data = {'email_subject':'Verify your email', 'email_body':email_body, 'email_to':user['email']}
-            Util.send_email(data)
+            MailerClass.send_email(data)
             
             # user['otp'] = OTP.now
             print(f'Your OTP is: {totp.now()}')
@@ -57,24 +49,28 @@ class VerifyEmailView(APIView):
             inputs_ = request.data
             validator = VerifyEmailSerializer(data=inputs_)
             validator.is_valid(raise_exception=True)
-            keygen = GenerateKey()
             user = validator.validated_data.get('email')
-            otp = validator.validated_data.get('auth_totp')
-            key = base64.b32encode(keygen.return_key(user.email).encode())
-            totp = pyotp.TOTP(key, digits=6, interval = EXPIRY_TIME)
-            if totp.verify(otp):
-                # User.objects.get(email=email)
-                user.is_verified = True
-                user.save()
+            otp = validator.validated_data.get('otp')
+            totp = CreateOTP.generate_totp(user.email)
+            if user.auth_provider == 'email':
+                if totp.verify(otp):
+                    user.is_verified = True
+                    user.save()
+                    registered_user = authenticate(email=user.email)
+                    data = {
+                        'username': registered_user.username,
+                        'email': registered_user.email,
+                        'tokens': registered_user.jwt_tokens
+                    }
+                else:
+                    raise AuthenticationFailed(detail="Invalid user login details or expired otp")
+                    return Response(data={"details": "Invalid or expired otp"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response(data={"details": "Invalid otp"}, status=status.HTTP_400_BAD_REQUEST)
-            # user['otp'] = OTP.now
-            print(f'Your OTP is: {totp.now()}')
-            
+                raise AuthenticationFailed(detail="Please continue your login using " + user.auth_provider)
         except TypeError as e:
             return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
         
-        return Response("User created successfull", status=status.HTTP_200_OK)
+        return Response(data=data, status=status.HTTP_200_OK)
 
 class LoginView(APIView):
     pass
