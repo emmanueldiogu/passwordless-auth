@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from .models import User
 from .serializers import LoginSerializer, RegisterUserByEmailSerializer, VerifyEmailSerializer
 from .utils import MailerClass, CreateOTP
+from .validators import VerifyEmailValidator
 
 
 # Create your views here.
@@ -47,28 +48,44 @@ class VerifyEmailView(generics.GenericAPIView):
             user = validator.validated_data.get('email')
             otp = validator.validated_data.get('otp')
             totp = CreateOTP.generate_totp(user.email)
-            if user.is_active:
-                if user.auth_provider == 'email':
-                    if totp.verify(otp):
-                        if not user.is_verified:
-                            user.is_verified = True
-                            user.save()
-                        registered_user = authenticate(email=user.email)
-                        data = {
-                            'username': registered_user.username,
-                            'email': registered_user.email,
-                            'tokens': registered_user.jwt_tokens
-                        }
-                    else:
-                        raise AuthenticationFailed(detail="Invalid user login details or expired otp "+user.email+" "+otp)
-                else:
-                    raise AuthenticationFailed(detail="Please continue your login using " + user.auth_provider)
-            else:
-                raise AuthenticationFailed(detail="This account is inactive, contact admin for further assistance")
+            checks = VerifyEmailValidator.run_checks(**{"otp":otp,"totp":totp,"user":user})
+            if not checks.get('success'):
+                return Response(checks,status =status.HTTP_401_UNAUTHORIZED)
+            if not user.is_verified:
+                user.is_verified = True
+                user.save()
+            registered_user = authenticate(email=user.email)
+            data = {
+                'username': registered_user.username,
+                'email': registered_user.email,
+                'tokens': registered_user.jwt_tokens
+            }
         except TypeError as e:
             return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(data=data, status=status.HTTP_200_OK)
+            # if user.is_active:
+            #     if user.auth_provider == 'email':
+            #         if totp.verify(otp):
+            #             if not user.is_verified:
+            #                 user.is_verified = True
+            #                 user.save()
+            #             registered_user = authenticate(email=user.email)
+            #             data = {
+            #                 'username': registered_user.username,
+            #                 'email': registered_user.email,
+            #                 'tokens': registered_user.jwt_tokens
+            #             }
+            #         else:
+            #             raise AuthenticationFailed(detail="Invalid user login details or expired otp "+user.email+" "+otp)
+            #     else:
+            #         raise AuthenticationFailed(detail="Please continue your login using " + user.auth_provider)
+            # else:
+            #     raise AuthenticationFailed(detail="This account is inactive, contact admin for further assistance")
+        # except TypeError as e:
+        #     return Response(data=e, status=status.HTTP_400_BAD_REQUEST)
+        
+        # return Response(data=data, status=status.HTTP_200_OK)
 
 class LoginView(generics.GenericAPIView):
     

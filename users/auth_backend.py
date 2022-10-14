@@ -4,10 +4,10 @@ from django.contrib.auth import get_user_model
 class PasswordlessAuthBackend(ModelBackend):
     """Log in to Django without providing a password."""
     
-    def authenticate(self, request, email):
+    def authenticate(self, request, **kwargs):
         User = get_user_model()
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(**kwargs)
             return user
         except User.DoesNotExist:
             return None
