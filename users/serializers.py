@@ -17,6 +17,8 @@ class RegisterUserByEmailSerializer(serializers.ModelSerializer):
         email = attrs.get('email', '')
         username = generate_username(email=email)
         attrs['username'] = username
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": ('Email already exists')})
         return attrs
 
     def create(self, validated_data):
