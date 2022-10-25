@@ -43,7 +43,9 @@ AUTH_PROVIDERS = {'facebook': 'facebook', 'google': 'google', 'email': 'email', 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     username = models.CharField(max_length=60, unique=True)
-    mobile = models.CharField(validators=[], max_length=17, null=True)
+    mobile = models.CharField(validators=[], max_length=17, blank=True, null=True)
+    first_name = models.CharField(max_length=100, blank=True, null=True)
+    last_name = models.CharField(max_length=100, blank=True, null=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_verified = models.BooleanField(default=False)

@@ -1,6 +1,7 @@
 import base64, pyotp
 from datetime import datetime
 from django.shortcuts import render
+from rest_framework import status
 
 from users.constants import TOTP_EXPIRY_TIME
 from ..utils import MailerClass
@@ -25,4 +26,4 @@ class UserService:
         data = {'email_subject':'Verify your email', 'email_body':email_body, 'email_to':email}
         MailerClass.send_email(data)
         user = serializer.data
-        return {"success":True,"message":"Successfully register user","user":user}
+        return {"success":True, "status":status.HTTP_201_CREATED, "message":"Successfully register user", "user":user}

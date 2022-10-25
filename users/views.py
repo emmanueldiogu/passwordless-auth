@@ -26,7 +26,7 @@ class RegisterView(generics.GenericAPIView):
             email = user['email']
             data = UserService.register_user(email=email, serializer=serializer)
             return Response(data=data, status=status.HTTP_201_CREATED)
-        return Response(data={"success":False, "message":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data={"success":False, "message":serializer.errors['email'][0], "status":status.HTTP_400_BAD_REQUEST}, status=status.HTTP_400_BAD_REQUEST)
         
 
 class VerifyEmailView(generics.GenericAPIView):
@@ -75,16 +75,3 @@ class LoginView(generics.GenericAPIView):
             print("End here")
             return Response(data=data, status=status.HTTP_200_OK)
         return Response(data=validator.errors, status=status.HTTP_400_BAD_REQUEST)
-        try:
-            inputs_ = request.data
-            validator = self.serializer_class(data=inputs_)
-            validator.is_valid(raise_exception=True)
-            email = validator.validated_data.get('email')
-            totp = CreateOTP.generate_totp(email)
-            email_body = "Use this otp " + totp.now() + " to log into your account."
-            data = {'email_subject':'Verify your email', 'email_body':email_body, 'email_to':email}
-            MailerClass.send_email(data)
-        except TypeError as e:
-            raise AuthenticationFailed(detail=e)
-        
-        return Response(data=validator.data, status=status.HTTP_200_OK)
