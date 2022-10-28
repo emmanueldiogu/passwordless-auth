@@ -3,7 +3,7 @@ from .common import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = []
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-q)tiu1*wvcn$x+=#&0vsm&(uc-zv*$)+1uuj&fz4m5wcf%_)f!'

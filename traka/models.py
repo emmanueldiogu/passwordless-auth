@@ -32,28 +32,44 @@ class Profile(models.Model):
         (HEIGHT_UNITS_FT, 'feets'),
     ]
 
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
     country = models.CharField(max_length=60)
     language = models.CharField(max_length=60)
     gender = models.CharField(
         max_length=1, choices=GENDER_CHOICES, default=GENDER_MALE)
-    height = models.DecimalField(max_digits=6, decimal_places=2)
+    height = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
     height_unit = models.CharField(
         max_length=2, choices=HEIGHT_UNITS_CHOICES, default=HEIGHT_UNITS_CM)
-    weight = models.DecimalField(max_digits=6, decimal_places=2)
+    weight = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
     weight_unit = models.CharField(
         max_length=2, choices=WEIGHT_UNITS_CHOICES, default=WEIGHT_UNITS_KG)
 
     def __str__(self) -> str:
-        return f'{self.user.first_name} {self.user.last_name}'
+        return self.user.email
 
-    @admin.display(ordering='user__first_name')
-    def first_name(self):
-        return self.user.first_name
+    @admin.display(ordering='user__email')
+    def email(self):
+        return self.user.email
 
-    @admin.display(ordering='user__last_name')
-    def last_name(self):
-        return self.user.last_name
+    @admin.display(ordering='user__mobile')
+    def mobile(self):
+        return self.user.mobile
 
     class Meta:
-        # ordering = ['first_name', 'last_name']
-        pass
+        ordering = ['first_name', 'last_name', 'user__email', 'user__mobile', 'country', 'gender']
+
+class StepCounter(models.Model):
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name='user_step', null=True, blank=True)
+    uuid = models.CharField(max_length=255, blank=True, null=True)
+    counts = models.IntegerField()
+    
+class ActivitiesLog(models.Model):
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name='user_activity', null=True, blank=True)
+    uuid = models.CharField(max_length=255, blank=True, null=True)
+    type = models.CharField(max_length=250, null=True, blank=True)
+    Screen = models.CharField(max_length=250, null=True, blank=True)
+    Product = models.IntegerField(null=True, blank=True)
+    
+    
+    
